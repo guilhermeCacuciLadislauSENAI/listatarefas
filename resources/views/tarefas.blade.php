@@ -10,7 +10,7 @@
 
     <div class="bg-dark text-white py-4 mb-4 shadow">
         <div class="container text-center">
-            <h1 class="fw-bold m-0">⚡ TaskFlow</h1>
+            <h1 class="fw-bold m-0">Task Now</h1>
             <p class="text-muted small mb-0">Seu gerenciador pessoal de alta performance</p>
         </div>
     </div>
