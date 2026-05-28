@@ -1,17 +1,22 @@
-FROM richarvey/nginx-php-fpm:latest
+# Usa uma imagem oficial super moderna com PHP 8.3 e Nginx já configurados
+FROM webdevops/php-nginx:8.3
 
-# Copia todos os arquivos do seu projeto para dentro do servidor
-COPY . /var/www/html
+# Avisa o servidor que a raiz do site é a pasta 'public' do Laravel
+ENV WEB_DOCUMENT_ROOT=/app/public
+ENV APP_ENV=production
 
-# Define que a pasta pública do Laravel é a raiz do site
-ENV WEBROOT /var/www/html/public
-ENV APP_ENV production
+# Define a pasta de trabalho dentro do servidor
+WORKDIR /app
 
-# Instala as dependências ignorando travas de plataforma/extensões do PHP
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+# Copia todo o seu projeto para dentro do servidor
+COPY . .
 
-# Garante as permissões necessárias para o Laravel salvar logs e arquivos
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Instala as dependências (agora SEM a flag ignore, pois a versão está correta!)
+RUN composer install --no-dev --optimize-autoloader
+
+# Dá as permissões corretas para o Laravel salvar arquivos de log e cache
+# (Nessa imagem webdevops, o usuário padrão chama-se 'application')
+RUN chown -R application:application /app/storage /app/bootstrap/cache
+RUN chmod -R 775 /app/storage /app/bootstrap/cache
 
 EXPOSE 80
