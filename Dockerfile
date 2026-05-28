@@ -1,22 +1,55 @@
-# Usa uma imagem oficial super moderna com PHP 8.3 e Nginx já configurados
-FROM webdevops/php-nginx:8.3
+FROM php:8.3-apache
 
-# Avisa o servidor que a raiz do site é a pasta 'public' do Laravel
-ENV WEB_DOCUMENT_ROOT=/app/public
-ENV APP_ENV=production
+# Define a imagem base do PHP 8.3 com Apache
 
-# Define a pasta de trabalho dentro do servidor
-WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    zip \
+    unzip \
+    libpq-dev \
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip
 
-# Copia todo o seu projeto para dentro do servidor
+# Instala dependências necessárias para Projeto e PostgreSQL
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copia o Composer para dentro do container
+
+WORKDIR /var/www/html
+
+# Define a pasta principal da aplicação
+
 COPY . .
 
-# Instala as dependências (agora SEM a flag ignore, pois a versão está correta!)
+# Copia todos os arquivos do projeto para dentro do container
+
 RUN composer install --no-dev --optimize-autoloader
 
-# Dá as permissões corretas para o Laravel salvar arquivos de log e cache
-# (Nessa imagem webdevops, o usuário padrão chama-se 'application')
-RUN chown -R application:application /app/storage /app/bootstrap/cache
-RUN chmod -R 775 /app/storage /app/bootstrap/cache
+# Instala as dependências do Projeto em modo produção
+
+RUN cp .env.example .env
+
+# Cria automaticamente o arquivo .env
+
+RUN php artisan key:generate
+
+# Gera automaticamente a APP_KEY do Projeto
+
+RUN chown -R www-data:www-data /var/www/html/storage
+RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
+
+# Define permissões necessárias para cache, logs e sessões
+
+RUN a2enmod rewrite
+
+# Ativa o módulo rewrite do Apache necessário para as rotas do Projeto
+
+COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
+
+# Copia a configuração personalizada do Apache
 
 EXPOSE 80
+
+# Libera a porta 80 para acesso da aplicação
