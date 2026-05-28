@@ -17,18 +17,16 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+  public function boot(): void
 {
-    // Configurações exclusivas para o ambiente online (produção)
     if (env('APP_ENV') === 'production') {
-        // Força todos os links, CSS e Bootstrap a usarem HTTPS (evita tela quebrada)
         \Illuminate\Support\Facades\URL::forceScheme('https');
         
-        // Truque de ouro: Executa as Migrations automaticamente sempre que o Render iniciar o app
+        // Garante a migração automática das tabelas para o banco 'tasknow'
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         } catch (\Exception $e) {
-            // Silencia o erro caso o banco ainda esteja inicializando
+            // Evita que o app quebre se o banco estiver ocupado
         }
     }
 }
